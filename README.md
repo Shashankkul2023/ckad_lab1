@@ -1,6 +1,6 @@
 Here are two realistic CKAD-style tasks covering `livenessProbe` and `readinessProbe` with different execution strategies (HTTP checks and Exec commands).
 
-In this repo I have created a bash script to set up the lab environment, and a verification script to test your solutions.
+In this repo,I have created a bash script to set up the lab environment, and a verification script to test your solutions and a cleanup script to cleanup the resources created during the execise.
 
 ---
 
