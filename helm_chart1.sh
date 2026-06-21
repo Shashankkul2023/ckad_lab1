@@ -1,55 +1,29 @@
 #!/bin/bash
-set -e
+# Description: Prepares the environment for the Helm task
 
-# Configuration
-CHART_NAME="ckad-web-app"
-NAMESPACE="helm-test"
-VALUES_FILE="values-dev.yaml"
+NAMESPACE="ckad-helm-challenge"
+CHART_REPO="bitnami"
+CHART_URL="https://charts.bitnami.com/bitnami"
 
-echo "=== STEP 1: PREPARE RESOURCES ==="
-# Create namespace if it doesn't exist
+echo "⚙️  Running Setup..."
+
+# 1. Create a clean workspace namespace
 kubectl create namespace $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
+echo "✓ Namespace '$NAMESPACE' created."
 
-# Generate a clean starter Helm chart
-if [ -d "$CHART_NAME" ]; then
-    echo "Directory $CHART_NAME already exists. Cleaning up older directory..."
-    rm -rf "$CHART_NAME"
-fi
-helm create $CHART_NAME
+# 2. Add and update the required Helm repository
+helm repo add $CHART_REPO $CHART_URL
+helm repo update
+echo "✓ Helm repository '$CHART_REPO' added and updated."
 
-# Create a custom values file to pass during validation
-cat <<EOF > $VALUES_FILE
-replicaCount: 3
-image:
-  repository: nginx
-  tag: alpine
-service:
-  type: ClusterIP
-  port: 80
+# 3. Generate a starter values file for the user to work with
+cat <<EOF > custom-values.yaml
+# CKAD TASK: Modify this file to set replicaCount to 2 
+# and disable internal persistence/auth if required.
+replicaCount: 1
+auth:
+  enabled: true
 EOF
-echo "Generated custom configuration: $VALUES_FILE"
 
-
-echo -e "\n=== STEP 2: VALIDATE ==="
-# 1. Lint the chart syntax
-echo "Running helm lint..."
-helm lint $CHART_NAME
-
-# 2. Perform a Dry-Run and Template render to ensure valid K8s manifests
-echo "Running dry-run template validation..."
-helm template $CHART_NAME ./$CHART_NAME --values=$VALUES_FILE --namespace=$NAMESPACE > /dev/null
-echo "✓ Chart template rendered successfully with no syntax errors."
-
-# 3. Dry-run installation against the live cluster API
-echo "Simulating live installation..."
-helm install $CHART_NAME ./$CHART_NAME --values=$VALUES_FILE --namespace=$NAMESPACE --dry-run
-echo "✓ Live API validation passed."
-
-
-echo -e "\n=== STEP 3: CLEANUP ==="
-echo "Cleaning up local workspace..."
-rm -f $VALUES_FILE
-rm -rf $CHART_NAME
-kubectl delete namespace $NAMESPACE --wait=false
-
-echo "=== FINISHED SUCCESSFULLY ==="
+echo "✓ Created starter file: 'custom-values.yaml'"
+echo -e "\nSetup complete! 🚀 Now perform your Helm install task using this values file."
